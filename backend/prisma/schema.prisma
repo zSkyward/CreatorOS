@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          Int            @id @default(autoincrement())
+  email       String         @unique
+  password    String         // Hashed password
+  fullName    String
+  plan        String         @default("none") // none, Starter, Pro, Elite
+  status      String         @default("pending")
+  signUpDate  DateTime       @default(now())
+  platforms   String[]       @default([])
+  isBanned    Boolean        @default(false)
+  tickets     SupportTicket[]
+  payments    Payment[]
+}
+
+model SupportTicket {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  title       String
+  category    String   // Billing, Technical, Optimization
+  priority    String   // Low, Medium, High
+  status      String   @default("Open") // Open, In_Progress, Closed
+  createdAt   DateTime @default(now())
+  messages    String[] @default([]) // JSON strings of conversation
+}
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  amount      Float
+  currency    String   @default("USD")
+  method      String   // Card, PayPal, Crypto
+  status      String   // Succeeded, Pending, Failed
+  referenceId String   @unique // Stripe Session ID or PayPal Order ID
+  createdAt   DateTime @default(now())
+}
